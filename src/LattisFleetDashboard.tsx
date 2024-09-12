@@ -27,117 +27,244 @@ const LattisFleetDashboard: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // ... (Previous state variables unchanged)
+  // Dashboard data
+  const [dashboardData, setDashboardData] = useState({
+    kpis: {
+      totalRides: { value: 1000, trend: 'up', percentage: 5 },
+      totalRevenue: { value: 5000, trend: 'up', percentage: 8 },
+      activeUsers: { value: 500, trend: 'up', percentage: 3 },
+      fleetUtilization: { value: 75, trend: 'down', percentage: 2 },
+      averageRideTime: { value: 15, trend: 'up', percentage: 1 },
+      customerSatisfaction: { value: 4.5, trend: 'up', percentage: 0.5 },
+    },
+    graphs: {
+      ridesOverTime: [
+        { date: '2023-01-01', rides: 100 },
+        { date: '2023-02-01', rides: 120 },
+        { date: '2023-03-01', rides: 150 },
+        { date: '2023-04-01', rides: 130 },
+        { date: '2023-05-01', rides: 180 },
+      ],
+      revenueByVehicleType: [
+        { type: 'E-Bike', revenue: 2000 },
+        { type: 'Scooter', revenue: 1500 },
+        { type: 'Moped', revenue: 1000 },
+        { type: 'Car', revenue: 500 },
+      ],
+      userGrowth: [
+        { date: '2023-01-01', users: 300 },
+        { date: '2023-02-01', users: 350 },
+        { date: '2023-03-01', users: 400 },
+        { date: '2023-04-01', users: 450 },
+        { date: '2023-05-01', users: 500 },
+      ],
+    },
+    activityFeed: [
+      { id: 1, type: 'ride_completed', user: 'John D.', vehicle: 'E-Bike 001', time: '2 minutes ago' },
+      { id: 2, type: 'maintenance_required', vehicle: 'Scooter 003', issue: 'Low battery', time: '15 minutes ago' },
+      { id: 3, type: 'new_user_registered', user: 'Sarah M.', time: '1 hour ago' },
+      { id: 4, type: 'payment_received', user: 'Mike R.', amount: 25, time: '3 hours ago' },
+      { id: 5, type: 'vehicle_relocated', vehicle: 'Moped 002', location: 'Downtown', time: '5 hours ago' },
+    ],
+  });
 
   const renderDashboard = () => (
-    <div>
-      {/* Dashboard content */}
-      <h2>Dashboard</h2>
-      {/* Add your dashboard content here */}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.entries(dashboardData.kpis).map(([key, data]) => (
+          <Card key={key} className={darkMode ? 'bg-gray-800 text-white' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</CardTitle>
+              {data.trend === 'up' ? <TrendingUp className="h-4 w-4 text-green-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{typeof data.value === 'number' ? data.value.toLocaleString() : data.value}</div>
+              <p className={`text-xs ${data.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+                {data.trend === 'up' ? '+' : '-'}{data.percentage}%
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className={darkMode ? 'bg-gray-800 text-white' : ''}>
+          <CardHeader>
+            <CardTitle>Rides Over Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={dashboardData.graphs.ridesOverTime}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Area type="monotone" dataKey="rides" stroke="#8884d8" fill="#8884d8" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className={darkMode ? 'bg-gray-800 text-white' : ''}>
+          <CardHeader>
+            <CardTitle>Revenue by Vehicle Type</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={dashboardData.graphs.revenueByVehicleType}
+                  dataKey="revenue"
+                  nameKey="type"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  fill="#8884d8"
+                  label
+                />
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className={darkMode ? 'bg-gray-800 text-white' : ''}>
+        <CardHeader>
+          <CardTitle>User Growth</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={dashboardData.graphs.userGrowth}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="users" stroke="#82ca9d" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card className={darkMode ? 'bg-gray-800 text-white' : ''}>
+        <CardHeader>
+          <CardTitle>Activity Feed</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-4">
+            {dashboardData.activityFeed.map((activity) => (
+              <li key={activity.id} className="flex items-center space-x-4">
+                {activity.type === 'ride_completed' && <Bike className="h-6 w-6 text-green-500" />}
+                {activity.type === 'maintenance_required' && <Wrench className="h-6 w-6 text-yellow-500" />}
+                {activity.type === 'new_user_registered' && <UserPlus className="h-6 w-6 text-blue-500" />}
+                {activity.type === 'payment_received' && <DollarSign className="h-6 w-6 text-green-500" />}
+                {activity.type === 'vehicle_relocated' && <MapPin className="h-6 w-6 text-purple-500" />}
+                <div>
+                  <p className="text-sm font-medium">
+                    {activity.type === 'ride_completed' && `${activity.user} completed a ride on ${activity.vehicle}`}
+                    {activity.type === 'maintenance_required' && `${activity.vehicle} requires maintenance: ${activity.issue}`}
+                    {activity.type === 'new_user_registered' && `${activity.user} registered as a new user`}
+                    {activity.type === 'payment_received' && `Received $${activity.amount} payment from ${activity.user}`}
+                    {activity.type === 'vehicle_relocated' && `${activity.vehicle} was relocated to ${activity.location}`}
+                  </p>
+                  <p className="text-xs text-gray-500">{activity.time}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 
   const renderGeofencing = () => (
     <div>
-      {/* Geofencing content */}
-      <h2>Geofencing</h2>
-      {/* Add your geofencing content here */}
+      <h2 className="text-2xl font-bold mb-4">Geofencing</h2>
+      <p>Geofencing settings and management will be implemented here.</p>
     </div>
   );
 
   const renderPenaltyFees = () => (
     <div>
-      {/* Penalty Fees content */}
-      <h2>Penalty Fees</h2>
-      {/* Add your penalty fees content here */}
+      <h2 className="text-2xl font-bold mb-4">Penalty Fees</h2>
+      <p>Penalty fee configuration and management will be implemented here.</p>
     </div>
   );
 
   const renderPayments = () => (
     <div>
-      {/* Payments content */}
-      <h2>Payments</h2>
-      {/* Add your payments content here */}
+      <h2 className="text-2xl font-bold mb-4">Payments</h2>
+      <p>Payment processing and management will be implemented here.</p>
     </div>
   );
 
   const renderMembershipPlans = () => (
     <div>
-      {/* Membership Plans content */}
-      <h2>Membership Plans</h2>
-      {/* Add your membership plans content here */}
+      <h2 className="text-2xl font-bold mb-4">Membership Plans</h2>
+      <p>Membership plan creation and management will be implemented here.</p>
     </div>
   );
 
   const renderPromotions = () => (
     <div>
-      {/* Promotions content */}
-      <h2>Promotions</h2>
-      {/* Add your promotions content here */}
+      <h2 className="text-2xl font-bold mb-4">Promotions</h2>
+      <p>Promotion creation and management will be implemented here.</p>
     </div>
   );
 
   const renderNotifications = () => (
     <div>
-      {/* Notifications content */}
-      <h2>Notifications</h2>
-      {/* Add your notifications content here */}
+      <h2 className="text-2xl font-bold mb-4">Notifications</h2>
+      <p>Notification settings and management will be implemented here.</p>
     </div>
   );
 
   const renderRideSettings = () => (
     <div>
-      {/* Ride Settings content */}
-      <h2>Ride Settings</h2>
-      {/* Add your ride settings content here */}
+      <h2 className="text-2xl font-bold mb-4">Ride Settings</h2>
+      <p>Ride configuration and settings will be implemented here.</p>
     </div>
   );
 
   const renderFleetMaintenance = () => (
     <div>
-      {/* Fleet Maintenance content */}
-      <h2>Fleet Maintenance</h2>
-      {/* Add your fleet maintenance content here */}
+      <h2 className="text-2xl font-bold mb-4">Fleet Maintenance</h2>
+      <p>Fleet maintenance scheduling and management will be implemented here.</p>
     </div>
   );
 
   const renderAnalytics = () => (
     <div>
-      {/* Analytics content */}
-      <h2>Analytics</h2>
-      {/* Add your analytics content here */}
+      <h2 className="text-2xl font-bold mb-4">Analytics</h2>
+      <p>Detailed analytics and reporting will be implemented here.</p>
     </div>
   );
 
   const renderThirdPartyIntegrations = () => (
     <div>
-      {/* Third-Party Integrations content */}
-      <h2>Third-Party Integrations</h2>
-      {/* Add your third-party integrations content here */}
+      <h2 className="text-2xl font-bold mb-4">Third-Party Integrations</h2>
+      <p>Integration with external services will be managed here.</p>
     </div>
   );
 
   const renderTaxManagement = () => (
     <div>
-      {/* Tax Management content */}
-      <h2>Tax Management</h2>
-      {/* Add your tax management content here */}
+      <h2 className="text-2xl font-bold mb-4">Tax Management</h2>
+      <p>Tax rate configuration and management will be implemented here.</p>
     </div>
   );
 
   const renderCustomerOnboarding = () => (
     <div>
-      {/* Customer Onboarding content */}
-      <h2>Customer Onboarding</h2>
-      {/* Add your customer onboarding content here */}
+      <h2 className="text-2xl font-bold mb-4">Customer Onboarding</h2>
+      <p>Customer onboarding process and management will be implemented here.</p>
     </div>
   );
 
   const renderAdvancedSettings = () => (
     <div>
-      {/* Advanced Settings content */}
-      <h2>Advanced Settings</h2>
-      {/* Add your advanced settings content here */}
+      <h2 className="text-2xl font-bold mb-4">Advanced Settings</h2>
+      <p>Advanced configuration options will be implemented here.</p>
     </div>
   );
 
